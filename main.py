@@ -15,9 +15,7 @@ import sys
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 
-def process(key, vcode):
-    api_key = API(api_key=(key, vcode),
-                  cache=ShelveCache('/tmp/eveapi'))
+def process(api_key):
     corp = Corp(api_key)
     sde = SDE()
 
@@ -94,4 +92,6 @@ if __name__ == "__main__":
     else:
         keys = keys_from_config('posmon.ini')
     for key_id, vcode in keys:
-        process(key_id, vcode)
+        api_key = API(api_key=(key_id, vcode),
+                      cache=ShelveCache('/tmp/eveapi'))
+        process(api_key)
