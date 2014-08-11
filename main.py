@@ -8,6 +8,7 @@ from evelink.map import Map
 from sde import SDE, TowerSet
 from datetime import datetime
 
+import ConfigParser
 import logging
 import sys
 
@@ -78,7 +79,19 @@ def process(key, vcode):
 
     print '=============================================='
 
+def keys_from_args(args):
+    return [(int(args[i]), args[i+1]) for i in range(1, len(args)-1, 2)]
+
+def keys_from_config(filename):
+    config = ConfigParser.RawConfigParser()
+    config.read(filename)
+    return [(config.getint(section, 'keyID'), config.get(section, 'vCode'))
+            for section in config.sections() if section.startswith('key:')]
+
 if __name__ == "__main__":
-    count = len(sys.argv) - 1
-    for value in xrange(1, count, 2):
-        process(int(sys.argv[value]), sys.argv[value + 1])
+    if len(sys.argv) > 1:
+        keys = keys_from_args(sys.argv)
+    else:
+        keys = keys_from_config('posmon.ini')
+    for key_id, vcode in keys:
+        process(key_id, vcode)
