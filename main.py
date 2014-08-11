@@ -59,22 +59,17 @@ def process(api_key):
                 assets[item_id] = item
                 modules.append(item_id)
 
-    for location in towers:
-        try:
-            r = corp.locations(location_list=[location]).result
-            towerset.add_mods(r, assets)
-        except APIError as e:
-            if e.code == '135':
-                continue
-            raise
-
-    idx = 0
-    inc = 100
-    while idx < len(modules):
-        fetch_subset = modules[idx:idx+inc]
-        idx += inc
-        r = corp.locations(location_list=fetch_subset).result
-        towerset.add_mods(r, assets)
+    def add_all_mods(locations):
+        for location in locations:
+            try:
+                r = corp.locations(location_list=[location]).result
+                towerset.add_mods(r, assets)
+            except APIError as e:
+                if e.code == '135':
+                    continue
+                raise
+    add_all_mods(towers)
+    add_all_mods(modules)
 
     print towerset.eval_moongoo()
 
