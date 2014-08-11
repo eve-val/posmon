@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from evelink.account import Account
-from evelink.api import API
+from evelink.api import API, APIError
 from evelink.cache.shelf import ShelveCache
 from evelink.corp import Corp
 from evelink.map import Map
