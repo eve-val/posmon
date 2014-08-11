@@ -66,6 +66,7 @@ def process(api_key):
                 towerset.add_mods(r, assets)
             except APIError as e:
                 if e.code == '135':
+                    print "strange location: %r" % location
                     continue
                 raise
     add_all_mods(towers)
