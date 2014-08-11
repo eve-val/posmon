@@ -479,8 +479,11 @@ class TowerSet:
         for tk in self._towers.keys():
             tv = self._towers[tk]
             if tv.loc.type == '???':
-                print 'Fixing up bogus location for %s' % tv
-                tv.loc = Location(assets[tk]['location_id'])
+                if tk in assets:
+                    print 'Fixing up bogus location for %s' % tv
+                    tv.loc = Location(assets[tk]['location_id'])
+                else:
+                    print "Couldn't even fix up bogus location for %s" % tv
 
         # Now bind modules to towers
         for l in locations:
