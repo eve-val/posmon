@@ -483,7 +483,8 @@ class TowerSet:
                     print 'Fixing up bogus location for %s' % tv
                     tv.loc = Location(assets[tk]['location_id'])
                 else:
-                    print "Couldn't even fix up bogus location for %s" % tv
+                    print "GIVING UP on %s" % tv
+                    del self.towers[tk]
 
         # Now bind modules to towers
         for l in locations:
