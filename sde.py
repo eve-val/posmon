@@ -484,7 +484,7 @@ class TowerSet:
                     tv.loc = Location(assets[tk]['location_id'])
                 else:
                     print "GIVING UP on %s" % tv
-                    del self.towers[tk]
+                    del self._towers[tk]
 
         # Now bind modules to towers
         for l in locations:
