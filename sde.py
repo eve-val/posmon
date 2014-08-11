@@ -301,6 +301,8 @@ class Tower:
         self._silo_multiplier = 1.0 + (silo_bonus_percent.valueFloat / 100.0) if silo_bonus_percent else 1.0
 
     def enrich(self, details, sov, my_alliance_id):
+        if details is None:
+            self._warnings.append('No info, something is up!!')
         for f in details['fuel']:
             quantity = details['fuel'][f]
             if f in sde.fuels:

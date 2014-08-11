@@ -25,7 +25,14 @@ def process(api_key):
 
     towerset = TowerSet(sde)
     towerset.add_all(corp.starbases().result)
-    towerset.enrich(lambda item_id: corp.starbase_details(starbase_id=item_id).result,
+    def details_cb(item_id):
+        try:
+            return corp.starbase_details(starbase_id=item_id).result
+        except APIError as e:
+            if e.code == '114':
+                return None
+            raise
+    towerset.enrich(details_cb,
                     lambda solar_id: solar_id in sov and sov[solar_id]['alliance_id'] == my_alliance,
                     my_alliance)
 
