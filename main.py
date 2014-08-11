@@ -12,8 +12,6 @@ import ConfigParser
 import logging
 import sys
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
 
 def process(api_key):
     corp = Corp(api_key)
@@ -87,6 +85,8 @@ def keys_from_config(filename):
             for section in config.sections() if section.startswith('key:')]
 
 if __name__ == "__main__":
+    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+
     if len(sys.argv) > 1:
         keys = keys_from_args(sys.argv)
     else:
