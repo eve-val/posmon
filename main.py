@@ -61,12 +61,12 @@ def process(api_key):
 
     def add_all_mods(locations):
         try:
-            r = corp.locations(location_list=[location]).result
+            r = corp.locations(location_list=locations).result
             towerset.add_mods(r, assets)
         except APIError as e:
             if e.code == '135':
                 if len(locations) == 1:
-                    print "strange location: %r" % location
+                    print "strange location: %r" % locations[0]
                 else:
                     # recurse until we've got all the locations we *can* get
                     mid = len(locations) // 2
