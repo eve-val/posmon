@@ -303,6 +303,8 @@ class Tower:
     def enrich(self, details, sov, my_alliance_id):
         if details is None:
             self._warnings.append('No info, something is up!!')
+            return
+
         for f in details['fuel']:
             quantity = details['fuel'][f]
             if f in sde.fuels:
