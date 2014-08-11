@@ -59,8 +59,14 @@ def process(api_key):
                 assets[item_id] = item
                 modules.append(item_id)
 
-    r = corp.locations(location_list=towers).result
-    towerset.add_mods(r, assets)
+    for location in towers:
+        try:
+            r = corp.locations(location_list=[location]).result
+            towerset.add_mods(r, assets)
+        except APIError as e:
+            if e.code == '135':
+                continue
+            raise
 
     idx = 0
     inc = 100
