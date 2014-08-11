@@ -60,17 +60,23 @@ def process(api_key):
                 modules.append(item_id)
 
     def add_all_mods(locations):
-        for location in locations:
-            try:
-                r = corp.locations(location_list=[location]).result
-                towerset.add_mods(r, assets)
-            except APIError as e:
-                if e.code == '135':
+        try:
+            r = corp.locations(location_list=[location]).result
+            towerset.add_mods(r, assets)
+        except APIError as e:
+            if e.code == '135':
+                if len(locations) == 1:
                     print "strange location: %r" % location
-                    continue
+                else:
+                    # recurse until we've got all the locations we *can* get
+                    mid = len(locations) // 2
+                    add_all_mods(locations[:mid])
+                    add_all_mods(locations[mid:])
+            else:
                 raise
     add_all_mods(towers)
-    add_all_mods(modules)
+    for chunk in range(0, len(modules), 100):
+        add_all_mods(modules[chunk:chunk+100])
 
     print towerset.eval_moongoo()
 
