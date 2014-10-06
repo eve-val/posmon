@@ -14,12 +14,34 @@ import sys
 
 
 def process(api_key):
+    character, cache_ts, towerset = pull_pos_info(api_key)
+    output_text(character, cache_ts, towerset)
+
+def output_text(character, cache_ts, towerset):
+    print 'Towers for "%s" corporation' % character['corp']['name']
+    print 'Values cached as of %s (%0.2f hours ago)\n\n' % (
+        cache_ts,
+        (datetime.utcnow() - cache_ts).total_seconds() / 3600.)
+
+    print towerset.eval_moongoo()
+
+    warnings = towerset.find_warnings()
+    if warnings:
+        print '!!! WARNINGS !!!'
+        for tower in warnings:
+            print '%s "%s"' % (towerset._towers[tower].loc, towerset._towers[tower]._name)
+            for warning in warnings[tower]:
+                print '* %s' % warning
+
+    print '=============================================='
+
+def pull_pos_info(api_key):
     corp = Corp(api_key)
     sde = SDE()
 
     my_character = Account(api_key).key_info().result['characters'].values()[0]
     my_alliance = my_character['alliance']['id'] if 'alliance' in my_character else None
-    print 'Towers for "%s" corporation' % my_character['corp']['name']
+    logging.info('Fetching info for "%s" corporation' % my_character['corp']['name'])
 
     sov = Map(api_key).sov_by_system().result[0]
 
@@ -43,9 +65,6 @@ def process(api_key):
     assets_api = corp.assets()
     assets_result = assets_api.result
     assets_timestamp = datetime.utcfromtimestamp(assets_api.timestamp)
-    print 'Values cached as of %s (%0.2f hours ago)\n\n' % (
-        assets_timestamp,
-        (datetime.utcnow() - assets_timestamp).total_seconds() / 3600.)
 
     for location in assets_result:
         if sde.location(location).type != 'system':
@@ -66,7 +85,7 @@ def process(api_key):
         except APIError as e:
             if e.code == '135':
                 if len(locations) == 1:
-                    print "strange location: %r" % locations[0]
+                    logging.warn("strange location: %r" % locations[0])
                 else:
                     # recurse until we've got all the locations we *can* get
                     mid = len(locations) // 2
@@ -78,17 +97,7 @@ def process(api_key):
     for chunk in range(0, len(modules), 100):
         add_all_mods(modules[chunk:chunk+100])
 
-    print towerset.eval_moongoo()
-
-    warnings = towerset.find_warnings()
-    if warnings:
-        print '!!! WARNINGS !!!'
-        for tower in warnings:
-            print '%s "%s"' % (towerset._towers[tower].loc, towerset._towers[tower]._name)
-            for warning in warnings[tower]:
-                print '* %s' % warning
-
-    print '=============================================='
+    return my_character, assets_timestamp, towerset
 
 def keys_from_args(args):
     return [(int(args[i]), args[i+1]) for i in range(1, len(args)-1, 2)]
