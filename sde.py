@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 
-from sqlalchemy import *
+from sqlalchemy import (
+    create_engine,
+    Column,
+    Float,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    )
 from sqlalchemy.orm import create_session
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -404,6 +412,7 @@ class Tower:
         for mod_id in self._moongoo_mods:
             container = self._mods[mod_id]
             annotated_modules.append(self.eval_container(container, reactions))
+
         return '%s\nReactions: %s\n%s\n' % (
             self.tower_str(),
             ','.join([str(x) for x in reactions]),
