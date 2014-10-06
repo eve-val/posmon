@@ -3,6 +3,7 @@ from evelink.cache.shelf import ShelveCache
 
 import ConfigParser
 import logging
+import sys
 
 from main import process
 
@@ -31,7 +32,10 @@ cache=ShelveCache(cache_path)
 try:
     for key_id, vcode in keys:
         api_key = API(api_key=(key_id, vcode), cache=cache)
-        process(api_key)
+        if len(sys.argv) > 1:
+            process(api_key, format=sys.argv[1])
+        else:
+            process(api_key)
 except Exception as e:
     logging.exception(str(e))
 finally:
