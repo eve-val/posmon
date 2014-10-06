@@ -48,7 +48,7 @@ def output_json(sde, character, cache_ts, towerset):
     output['corporation'] = character['corp']['name']
     output['cache_ts'] = str(cache_ts)
     output['towers'] = []
-    for tower_data in towerset._towers:
+    for tower_data in towerset._towers.itervalues():
         tower = {}
         output['towers'].append(tower)
 
@@ -58,7 +58,7 @@ def output_json(sde, character, cache_ts, towerset):
             'region_id': tower_data.loc._region_id,
             'region_name': tower_data.loc.region,
             'system_id': tower_data.loc._system_id,
-            'system_name': tower_data.locl.system,
+            'system_name': tower_data.loc.system,
         }
         if tower_data.loc.type == 'orbit':
             tower['location']['orbit_id'] = tower_data.loc._orbit_id
@@ -69,7 +69,9 @@ def output_json(sde, character, cache_ts, towerset):
         tower['stront_per_hour'] = tower_data._sph
         tower['name'] = tower_data._name
         tower['moongoo_mods'] = []
-        for mod_data in tower_data._moongoo_mods:
+        for mod_id, mod_data in tower_data._mods.iteritems():
+            if mod_id not in tower_data._moongoo_mods:
+                continue
             mod = {}
             tower['moongoo_mods'].append(mod)
 
