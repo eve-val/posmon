@@ -1,6 +1,5 @@
 from evelink.api import API
 from evelink.cache.shelf import ShelveCache
-from raven.handlers.logging import SentryHandler
 
 import ConfigParser
 import logging
@@ -14,13 +13,18 @@ config.read('posmon.ini')
 keys = [(config.getint(section, 'keyID'), config.get(section, 'vCode'))
         for section in config.sections() if section.startswith('key:')]
 cache_path = config.get('posmon', 'cache')
-sentry_uri = config.get('posmon', 'sentry.uri')
+try:
+    sentry_uri = config.get('posmon', 'sentry.uri')
+except ConfigParser.NoOptionError:
+    sentry_uri = None
 
 # Set up logging
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-sentry_handler = SentryHandler(sentry_uri)
-sentry_handler.setLevel(logging.WARNING)
-logging.getLogger().addHandler(sentry_handler)
+if sentry_uri:
+    from raven.handlers.logging import SentryHandler
+    sentry_handler = SentryHandler(sentry_uri)
+    sentry_handler.setLevel(logging.WARNING)
+    logging.getLogger().addHandler(sentry_handler)
 
 # Run!
 cache=ShelveCache(cache_path)
