@@ -2,6 +2,7 @@ from evelink.api import API
 from evelink.cache.shelf import ShelveCache
 
 import ConfigParser
+import json
 import logging
 import sys
 
@@ -29,14 +30,17 @@ if sentry_uri:
 
 # Run!
 cache=ShelveCache(cache_path)
+fmt = sys.argv[1] if len(sys.argv) > 1 else 'text'
 try:
     for key_id, vcode in keys:
         api_key = API(api_key=(key_id, vcode), cache=cache)
-        if len(sys.argv) > 1:
-            process(api_key, format=sys.argv[1])
-        else:
-            process(api_key)
-except Exception as e:
-    logging.exception(str(e))
+        try:
+            process(api_key, format=fmt)
+        except Exception as e:
+            if fmt == 'text':
+                print "error processing key: %s" % (str(e),)
+            else:
+                print json.dumps({'error': str(e)})
+            logging.exception(str(e))
 finally:
     cache.cache.close()
