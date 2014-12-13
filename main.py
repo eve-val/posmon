@@ -5,7 +5,7 @@ from evelink.api import API, APIError
 from evelink.cache.shelf import ShelveCache
 from evelink.corp import Corp
 from evelink.map import Map
-from sde import SDE, TowerSet
+from sde import SDE, TowerSet, Location
 from datetime import datetime
 
 import ConfigParser
@@ -16,7 +16,8 @@ import sys
 
 def process(api_key, format='text'):
     sde = SDE()
-    character, cache_ts, towerset = pull_pos_info(sde, api_key)
+    config = tower_config('posmon.ini')
+    character, cache_ts, towerset = pull_pos_info(sde, api_key, config)
     if format == 'text':
         output_text(character, cache_ts, towerset)
     elif format == 'json':
@@ -91,7 +92,7 @@ def output_json(sde, character, cache_ts, towerset):
     print json.dumps(output)
 
 
-def pull_pos_info(sde, api_key):
+def pull_pos_info(sde, api_key, config):
     corp = Corp(api_key)
 
     my_character = Account(api_key).key_info().result['characters'].values()[0]
@@ -100,7 +101,7 @@ def pull_pos_info(sde, api_key):
 
     sov = Map(api_key).sov_by_system().result[0]
 
-    towerset = TowerSet(sde)
+    towerset = TowerSet(sde, config)
     towerset.add_all(corp.starbases().result)
 
     def details_cb(item_id):
@@ -155,6 +156,36 @@ def pull_pos_info(sde, api_key):
         add_all_mods(modules[chunk:chunk+100])
 
     return my_character, assets_timestamp, towerset
+
+
+def tower_config(filename):
+    config = ConfigParser.RawConfigParser()
+    config.read(filename)
+    res = dict()
+    for section in config.sections():
+        if not section.startswith("tower:"):
+            continue
+
+        tower = section[6:]
+        sect = dict()
+        for k,v in config.items(section):
+            if v.lower() == "true":
+                v = True
+            elif v.lower() == "false":
+                v = False
+            try:
+                v = float(v)
+            except ValueError:
+                pass
+            sect[k] = v
+
+        if tower == "default":
+            res[tower] = sect
+            continue
+        l = Location(location_string=tower)
+        res[l._location_id] = sect
+
+    return res
 
 
 def keys_from_args(args):
