@@ -355,7 +355,7 @@ class Tower:
         if combat['hostility']['standing']['enabled'] != self.warnings_config['use_standings']:
             self._warnings.append('Standings: POS misconfigured to {}use standings for combat.'
                                   .format("not " if self.warnings_config['use_standings'] else ""))
-        if combat['hostility']['standing']['threshold'] < self.warnings_config['min_standing'] or \
+        if combat['hostility']['standing']['threshold'] <= self.warnings_config['min_standing'] or \
                         combat['hostility']['standing']['threshold'] > self.warnings_config['max_standing']:
             self._warnings.append('Standings: POS misconfigured to shoot people with less than {0} standings, should be'
                                   ' between {1} and {2}.'
@@ -364,7 +364,7 @@ class Tower:
         if combat['hostility']['sec_status']['enabled'] != self.warnings_config['sec_status']:
             self._warnings.append('Standings: POS misconfigured to {}shoot on sec status.'
                                   .format("not " if self.warnings_config['sec_status'] else ""))
-        if combat['hostility']['sec_status']['threshold'] < self.warnings_config['min_security'] or \
+        if combat['hostility']['sec_status']['threshold'] <= self.warnings_config['min_security'] or \
                         combat['hostility']['sec_status']['threshold'] > self.warnings_config['max_security']:
             self._warnings.append('Standings: POS misconfigured to shoot people with less than {0} security, should be '
                                   'between {1} and {2}.'
