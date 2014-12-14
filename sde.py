@@ -62,7 +62,11 @@ class AttributeTypes(Base):
 session = create_session(bind=engine)
 
 class Location:
-    def __init__(self, locationid):
+    def __init__(self, locationid=None, location_string=None):
+        if location_string and not locationid:
+            q = session.query(MapDenormalize).filter_by(itemName=location_string).first()
+            locationid = q.itemID
+
         solar_min = 30000000
         solar_max = 39999999
         orbit_min = 40000000
@@ -282,7 +286,7 @@ class TowerMod:
         return name + contentstr
 
 class Tower:
-    def __init__(self, row):
+    def __init__(self, row, config):
         self._type_id = row['type_id']
         self._item_id = row['id']
         self.loc = Location(row['moon_id'])
@@ -302,6 +306,7 @@ class Tower:
         self._modtypes = {}
         self._moongoo_mods = []
         self._warnings = []
+        self.warnings_config = config
 
         silo_bonus_attribute = session.query(AttributeTypes).filter_by(attributeName = 'controlTowerSiloCapacityBonus').first().attributeID
         silo_bonus_percent = session.query(TypeAttributes).filter_by(typeID = self._type_id,
@@ -327,25 +332,45 @@ class Tower:
             self._sph = math.ceil(self._sph * 0.75)
 
         stront_hours = self._stront / self._sph
-        if stront_hours <= 28 or stront_hours >= 44:
-            self._warnings.append('Incorrect stront: stronted for %dh but needs to be between 29h and 43h.' % stront_hours)
+        if stront_hours <= self.warnings_config['stront_min'] or stront_hours >= self.warnings_config['stront_max']:
+            self._warnings.append('Incorrect stront: stronted for {current}h but needs to be between {min}h and {max}h.'
+                                  .format(current=stront_hours, min=self.warnings_config['stront_min'],
+                                          max=self.warnings_config['stront_max']))
         fuel_hours = self._fuel / self._fph
-        if fuel_hours <= 24:
+        if fuel_hours <= self.warnings_config['critical_fuel']:
             self._warnings.append('CRITICAL: Pinging tower with %d hours of fuel left.' % fuel_hours)
-        elif fuel_hours <= 72:
+        elif fuel_hours <= self.warnings_config['low_fuel']:
             self._warnings.append('Low fuel: tower with %d hours of fuel left.' % fuel_hours)
 
         ff = details['permissions']['forcefield']
-        if not ff['corp'] or not ff['alliance']:
-            self._warnings.append('Access: corp and/or alliance access not set. %s' % ff)
+        if ff['corp'] != self.warnings_config['corp_access']:
+            self._warnings.append('Access: corp access {}set.'.format("not " if not ff['corp'] else ""))
+        if ff['alliance'] != self.warnings_config['alliance_access']:
+            self._warnings.append('Access: alliance access {}set.'.format("not " if not ff['alliance'] else ""))
 
         combat = details['combat']
-        if my_alliance_id != combat['standings_owner_id']:
-            self._warnings.append('Standings: use alliance standings not set.')
-        if not combat['hostility']['standing']['enabled'] or combat['hostility']['standing']['threshold'] <= 0.01:
-            self._warnings.append('Standings: POS misconfigured to not shoot neutrals.')
-        if combat['hostility']['sec_status']['enabled']:
-            self._warnings.append('Standings: POS misconfigured to shoot on sec status.')
+        if (my_alliance_id == combat['standings_owner_id']) != self.warnings_config['alliance_standings']:
+            self._warnings.append('Standings: use alliance standings {}set.'\
+                .format("not " if self.warnings_config['alliance_standings'] else ""))
+        if combat['hostility']['standing']['enabled'] != self.warnings_config['use_standings']:
+            self._warnings.append('Standings: POS misconfigured to {}use standings for combat.'
+                                  .format("not " if self.warnings_config['use_standings'] else ""))
+        if combat['hostility']['standing']['threshold'] <= self.warnings_config['min_standing'] or \
+                        combat['hostility']['standing']['threshold'] > self.warnings_config['max_standing']:
+            self._warnings.append('Standings: POS misconfigured to shoot people with less than {0} standings, should be'
+                                  ' between {1} and {2}.'
+                                  .format(combat['hostility']['standing']['threshold'],
+                                          self.warnings_config['min_standing'], self.warnings_config['max_standing']))
+        if combat['hostility']['sec_status']['enabled'] != self.warnings_config['sec_status']:
+            self._warnings.append('Standings: POS misconfigured to {}shoot on sec status.'
+                                  .format("not " if self.warnings_config['sec_status'] else ""))
+        if combat['hostility']['sec_status']['threshold'] <= self.warnings_config['min_security'] or \
+                        combat['hostility']['sec_status']['threshold'] > self.warnings_config['max_security']:
+            self._warnings.append('Standings: POS misconfigured to shoot people with less than {0} security, should be '
+                                  'between {1} and {2}.'
+                                  .format(combat['hostility']['sec_status']['threshold'],
+                                          self.warnings_config['min_security'], self.warnings_config['max_security']))
+
 
     def set_name(self, name):
         self._name = name
@@ -431,12 +456,12 @@ class Tower:
         for reaction in reactions:
             if content_type in reaction._inputs:
                 remaining = quantity / reaction._inputs[content_type]
-                if remaining < 48:
+                if remaining < self.warnings_config['low_input']:
                     self._warnings.append('Low input: %d hours of reactant %s left.' % (remaining, sde.typename(content_type)))
                 return '  %s (input, remaining %0.2fd)' % (str(container), remaining / 24.)
             if content_type in reaction._outputs:
                 remaining = headroom / reaction._outputs[content_type]
-                if remaining < 48:
+                if remaining < self.warnings_config['low_output']:
                       self._warnings.append('Too much output: %d hours of room for product %s left.' % (remaining, sde.typename(content_type)))
                 return  '  %s (output, remaining %0.2fd)' % (str(container), remaining / 24.)
         return '  %s (unrecognized)' % str(container)
@@ -452,13 +477,14 @@ def minimize(set, f):
     return mk
 
 class TowerSet:
-    def __init__(self, sde):
+    def __init__(self, sde, config):
         self._sde = sde
+        self.config = config
         self._towers = {}
 
     def add_all(self, r):
         for item_id in r:
-            self._towers[item_id] = Tower(r[item_id])
+            self._towers[item_id] = Tower(r[item_id], self.config[r[item_id]['moon_id']] if r[item_id]['moon_id'] in self.config else self.config['default'])
 
     def enrich(self, detail_callback, sov_callback, my_alliance_id):
         for t in self._towers:
