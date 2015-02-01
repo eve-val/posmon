@@ -137,13 +137,14 @@ def pull_pos_info(sde, api_key, config):
                 modules.append(item_id)
 
     def add_all_mods(locations):
+        if not locations:
+            return
         try:
             r = corp.locations(location_list=locations).result
             towerset.add_mods(r, assets)
         except APIError as e:
-            # 126: Invalid ID found in ID list. Please ensure input is a comma seperated list of valid 32-bit non-negative integers.
             # 135: Owner is not the owner of all itemIDs or a non-existant itemID was passed in. If you are not trying to scrape the API, please ensure your input are valid locations associated with the key owner.
-            if e.code in ['126', '135']:
+            if e.code == '135':
                 if len(locations) == 1:
                     logging.warn("strange location: %r" % locations[0])
                 else:
