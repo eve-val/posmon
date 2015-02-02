@@ -6,6 +6,8 @@ import json
 import logging
 import sys
 
+import sde
+
 from main import process
 
 
@@ -15,6 +17,7 @@ config.read('posmon.ini')
 keys = [(config.getint(section, 'keyID'), config.get(section, 'vCode'))
         for section in config.sections() if section.startswith('key:')]
 cache_path = config.get('posmon', 'cache')
+sde_db_uri = config.get('posmon', 'sde_db_uri')
 try:
     sentry_uri = config.get('posmon', 'sentry.uri')
 except ConfigParser.NoOptionError:
@@ -27,6 +30,8 @@ if sentry_uri:
     sentry_handler = SentryHandler(sentry_uri)
     sentry_handler.setLevel(logging.WARNING)
     logging.getLogger().addHandler(sentry_handler)
+
+sde.initialize(sde_db_uri)
 
 # Run!
 cache=ShelveCache(cache_path)

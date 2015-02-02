@@ -5,7 +5,7 @@ from evelink.api import API, APIError
 from evelink.cache.shelf import ShelveCache
 from evelink.corp import Corp
 from evelink.map import Map
-from sde import SDE, TowerSet, Location
+from sde import initialize as sde_initialize, SDE, TowerSet, Location
 from datetime import datetime
 
 import ConfigParser
@@ -203,6 +203,9 @@ def keys_from_config(filename):
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+
+    # FIXME: read from config
+    sde_initialize("sqlite:///eve.db")
 
     if len(sys.argv) > 1:
         keys = keys_from_args(sys.argv)
