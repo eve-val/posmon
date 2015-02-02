@@ -14,9 +14,9 @@ import logging
 import sys
 
 
-def process(api_key, format='text'):
+def process(api_key, format='text', config=None):
     sde = SDE()
-    config = tower_config('posmon.ini')
+    config = tower_config(config)
     character, cache_ts, towerset = pull_pos_info(sde, api_key, config)
     if format == 'text':
         output_text(character, cache_ts, towerset)
@@ -161,9 +161,7 @@ def pull_pos_info(sde, api_key, config):
     return my_character, assets_timestamp, towerset
 
 
-def tower_config(filename):
-    config = ConfigParser.RawConfigParser()
-    config.read(filename)
+def tower_config(config):
     res = dict()
     for section in config.sections():
         if not section.startswith("tower:"):
@@ -195,26 +193,27 @@ def keys_from_args(args):
     return [(int(args[i]), args[i+1]) for i in range(1, len(args)-1, 2)]
 
 
-def keys_from_config(filename):
-    config = ConfigParser.RawConfigParser()
-    config.read(filename)
+def keys_from_config(config):
     return [(config.getint(section, 'keyID'), config.get(section, 'vCode'))
             for section in config.sections() if section.startswith('key:')]
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
-    # FIXME: read from config
-    sde_initialize("sqlite:///eve.db")
+    config = ConfigParser.RawConfigParser()
+    config.read('posmon.ini')
+
+    print config.get('posmon', 'sde_db_uri')
+    sde_initialize(config.get('posmon', 'sde_db_uri'))
 
     if len(sys.argv) > 1:
         keys = keys_from_args(sys.argv)
     else:
-        keys = keys_from_config('posmon.ini')
+        keys = keys_from_config(config)
     for key_id, vcode in keys:
         api_key = API(api_key=(key_id, vcode),
                       cache=ShelveCache('/tmp/eveapi'))
         if len(sys.argv) > 1:
-            process(api_key, format=sys.argv[1])
+            process(api_key, format=sys.argv[1], config=config)
         else:
-            process(api_key)
+            process(api_key, config=config)
