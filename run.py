@@ -1,5 +1,5 @@
 from evelink.api import API
-from evelink.cache.shelf import ShelveCache
+from evelink.cache.sqlite import SqliteCache
 
 import ConfigParser
 import json
@@ -34,7 +34,7 @@ if sentry_uri:
 sde.initialize(sde_db_uri)
 
 # Run!
-cache=ShelveCache(cache_path)
+cache=SqliteCache(cache_path)
 fmt = sys.argv[1] if len(sys.argv) > 1 else 'text'
 try:
     for key_id, vcode in keys:

@@ -2,7 +2,7 @@
 
 from evelink.account import Account
 from evelink.api import API, APIError
-from evelink.cache.shelf import ShelveCache
+from evelink.cache.sqlite import SqliteCache
 from evelink.corp import Corp
 from evelink.map import Map
 from sde import initialize as sde_initialize, SDE, TowerSet, Location
@@ -212,7 +212,7 @@ if __name__ == "__main__":
         keys = keys_from_config(config)
     for key_id, vcode in keys:
         api_key = API(api_key=(key_id, vcode),
-                      cache=ShelveCache('/tmp/eveapi'))
+                      cache=SqliteCache(config.get('posmon', 'cache')))
         if len(sys.argv) > 1:
             process(api_key, format=sys.argv[1], config=config)
         else:
