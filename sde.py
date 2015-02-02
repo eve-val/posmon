@@ -358,27 +358,33 @@ class Tower:
             self._warnings.append('Access: alliance access {}set.'.format("not " if not ff['alliance'] else ""))
 
         combat = details['combat']
-        if (my_alliance_id == combat['standings_owner_id']) != self.warnings_config['alliance_standings']:
-            self._warnings.append('Standings: use alliance standings {}set.'\
-                .format("not " if self.warnings_config['alliance_standings'] else ""))
         if combat['hostility']['standing']['enabled'] != self.warnings_config['use_standings']:
             self._warnings.append('Standings: POS misconfigured to {}use standings for combat.'
                                   .format("not " if self.warnings_config['use_standings'] else ""))
-        if combat['hostility']['standing']['threshold'] <= self.warnings_config['min_standing'] or \
-                        combat['hostility']['standing']['threshold'] > self.warnings_config['max_standing']:
-            self._warnings.append('Standings: POS misconfigured to shoot people with less than {0} standings, should be'
-                                  ' between {1} and {2}.'
-                                  .format(combat['hostility']['standing']['threshold'],
-                                          self.warnings_config['min_standing'], self.warnings_config['max_standing']))
+        if self.warnings_config['use_standings']:
+            if (my_alliance_id == combat['standings_owner_id']) != self.warnings_config['alliance_standings']:
+                self._warnings.append('Standings: use alliance standings {}set.'\
+                    .format("not " if self.warnings_config['alliance_standings'] else ""))
+            if not (self.warnings_config['min_standing'] <=
+                    combat['hostility']['standing']['threshold'] <=
+                    self.warnings_config['max_standing']):
+                self._warnings.append('Standings: POS misconfigured to shoot people with less than {0} standings, '
+                                      ' should be between {1} and {2}.'
+                                      .format(combat['hostility']['standing']['threshold'],
+                                              self.warnings_config['min_standing'],
+                                              self.warnings_config['max_standing']))
         if combat['hostility']['sec_status']['enabled'] != self.warnings_config['sec_status']:
             self._warnings.append('Standings: POS misconfigured to {}shoot on sec status.'
                                   .format("not " if self.warnings_config['sec_status'] else ""))
-        if combat['hostility']['sec_status']['threshold'] <= self.warnings_config['min_security'] or \
-                        combat['hostility']['sec_status']['threshold'] > self.warnings_config['max_security']:
-            self._warnings.append('Standings: POS misconfigured to shoot people with less than {0} security, should be '
-                                  'between {1} and {2}.'
-                                  .format(combat['hostility']['sec_status']['threshold'],
-                                          self.warnings_config['min_security'], self.warnings_config['max_security']))
+        if self.warnings_config['sec_status']:
+            if not (self.warnings_config['min_security'] <=
+                    combat['hostility']['sec_status']['threshold'] <=
+                    self.warnings_config['max_security']):
+                self._warnings.append('Standings: POS misconfigured to shoot people with less than {0} security, '
+                                      'should be between {1} and {2}.'
+                                      .format(combat['hostility']['sec_status']['threshold'],
+                                              self.warnings_config['min_security'],
+                                              self.warnings_config['max_security']))
 
 
     def set_name(self, name):
