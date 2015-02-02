@@ -36,16 +36,13 @@ sde.initialize(sde_db_uri)
 # Run!
 cache=SqliteCache(cache_path)
 fmt = sys.argv[1] if len(sys.argv) > 1 else 'text'
-try:
-    for key_id, vcode in keys:
-        api_key = API(api_key=(key_id, vcode), cache=cache)
-        try:
-            process(api_key, format=fmt, config=config)
-        except Exception as e:
-            if fmt == 'text':
-                print "error processing key: %s" % (str(e),)
-            else:
-                print json.dumps({'error': str(e)})
-            logging.exception(str(e))
-finally:
-    cache.cache.close()
+for key_id, vcode in keys:
+    api_key = API(api_key=(key_id, vcode), cache=cache)
+    try:
+        process(api_key, format=fmt, config=config)
+    except Exception as e:
+        if fmt == 'text':
+            print "error processing key: %s" % (str(e),)
+        else:
+            print json.dumps({'error': str(e)})
+        logging.exception(str(e))
