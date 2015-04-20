@@ -146,7 +146,7 @@ def pull_pos_info(sde, api_key, config):
             # 135: Owner is not the owner of all itemIDs or a non-existant itemID was passed in. If you are not trying to scrape the API, please ensure your input are valid locations associated with the key owner.
             if e.code == '135':
                 if len(locations) == 1:
-                    logging.warn("strange location: %r" % locations[0])
+                    logging.info("strange location: %r" % locations[0])
                 else:
                     # recurse until we've got all the locations we *can* get
                     mid = len(locations) // 2
