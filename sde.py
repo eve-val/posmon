@@ -397,7 +397,7 @@ class Tower:
         xyz0 = self._xyz
         return math.sqrt((xyz0[0] - xyz1[0]) ** 2
                        + (xyz0[1] - xyz1[1]) ** 2
-                       + (xyz0[2] - xyz1[2]))
+                       + (xyz0[2] - xyz1[2]) ** 2)
 
     def add_mod(self, mod):
         type = mod['item_type_id']
